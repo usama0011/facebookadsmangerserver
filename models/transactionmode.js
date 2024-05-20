@@ -14,17 +14,10 @@ const transactionSchema = new Schema(
         Amount: {
             type: String,
         },
-
         Paymentmethod: {
             type: String,
         },
         Paymentstatus: {
-            type: String,
-        },
-        Date: {
-            type: String,
-        },
-        Date: {
             type: String,
         },
         PaymentStatus: {
