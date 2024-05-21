@@ -43,6 +43,9 @@ const campaignSchema = new Schema(
     },
     campaingImage: {
       type: String,
+    },
+    entryDate: {
+      type: String,
     }
   },
   { timestamps: true }

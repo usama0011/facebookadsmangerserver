@@ -49,6 +49,9 @@ const adsSetSchema = new Schema(
         },
         adssetImage: {
             type: String,
+        },
+        entryDate: {
+            type: String,
         }
     },
     { timestamps: true }

@@ -57,6 +57,9 @@ const adsSchema = new Schema(
         },
         adImage: {
             type: String,
+        },
+        entryDate: {
+            type: String,
         }
     },
     { timestamps: true }
