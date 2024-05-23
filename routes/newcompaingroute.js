@@ -5,18 +5,26 @@ const router = express.Router();
 
 // GET all campaigns
 
+
 router.get("/", async (req, res) => {
   const { startDate, endDate } = req.query;
+  console.log("Received startDate:", startDate, "endDate:", endDate);
 
   try {
     let campaigns;
     if (startDate && endDate) {
+      // Convert dates to 'YYYY-MM-DD' format
+      const parsedStartDate = new Date(startDate).toISOString().split('T')[0];
+      const parsedEndDate = new Date(endDate).toISOString().split('T')[0];
+
+      console.log("Parsed startDate:", parsedStartDate, "Parsed endDate:", parsedEndDate);
+
       campaigns = await Campaign.find({
         entryDate: {
-          $gte: new Date(startDate),
-          $lte: new Date(endDate)
+          $gte: parsedStartDate,
+          $lte: parsedEndDate
         }
-      });
+      }).exec();
     } else {
       campaigns = await Campaign.find();
     }
@@ -25,7 +33,6 @@ router.get("/", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-
 // GET a single campaign
 router.get("/:id", async (req, res) => {
   try {
