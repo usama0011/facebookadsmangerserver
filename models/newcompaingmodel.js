@@ -11,6 +11,9 @@ const campaignSchema = new Schema(
     campaingname: {
       type: String,
     },
+    campainglink: {
+      type: String,
+    },
     Delivery: {
       type: String,
     },
