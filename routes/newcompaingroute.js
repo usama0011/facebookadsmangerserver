@@ -4,9 +4,22 @@ import Campaign from '../models/newcompaingmodel.js'
 const router = express.Router();
 
 // GET all campaigns
+
 router.get("/", async (req, res) => {
+  const { startDate, endDate } = req.query;
+
   try {
-    const campaigns = await Campaign.find();
+    let campaigns;
+    if (startDate && endDate) {
+      campaigns = await Campaign.find({
+        entryDate: {
+          $gte: new Date(startDate),
+          $lte: new Date(endDate)
+        }
+      });
+    } else {
+      campaigns = await Campaign.find();
+    }
     res.status(200).json(campaigns);
   } catch (err) {
     res.status(500).json({ message: err.message });
