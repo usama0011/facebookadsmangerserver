@@ -4,7 +4,6 @@ const { Schema } = mongoose;
 
 const campaignSchema = new Schema(
   {
-
     currentSwitch: {
       type: Boolean,
     },
@@ -12,6 +11,9 @@ const campaignSchema = new Schema(
       type: String,
     },
     campainglink: {
+      type: String,
+    },
+    adname: {
       type: String,
     },
     Delivery: {
@@ -48,6 +50,21 @@ const campaignSchema = new Schema(
       type: String,
     },
     entryDate: {
+      type: String,
+    },
+    lastSignificent: {
+      type: String,
+    },
+    schedule: {
+      type: String,
+    },
+    qualityRanking: {
+      type: String,
+    },
+    engagementrateranking: {
+      type: String,
+    },
+    conversionrateranking: {
       type: String,
     }
   },
