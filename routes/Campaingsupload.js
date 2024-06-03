@@ -1,11 +1,9 @@
 import express from "express";
-import multer from "multer";
 import exceljs from "exceljs";
 import Lead from "../models/newcompaingmodel.js";
 const router = express.Router();
 import { Readable, Stream } from "stream"; // Use import for ES6 modules
 import multer from "multer";
-import Lead from "../models/leadsmodel.js";
 import csv from "csv-parser";
 const storage = multer.memoryStorage();
 
@@ -63,3 +61,5 @@ router.post(
         }
     }
 );
+
+export default router;
