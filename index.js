@@ -7,7 +7,7 @@ import newCampaingRoute from './routes/newcompaingroute.js'
 import adSetRoute from './routes/adssetroute.js'
 import AdRoute from './routes/adsroute.js'
 import TransactionRoute from './routes/transactionroute.js'
-
+import UPloadCampaings from './routes/Campaingsupload.js'
 const app = express();
 dotenv.config();
 
@@ -33,6 +33,7 @@ app.get("/", (req, res) => {
 // Start router from here
 app.use("/api/newcampaing", newCampaingRoute);
 app.use("/api/adsset", adSetRoute);
+app.use("/api/campaings", UPloadCampaings);
 app.use("/api/ads", AdRoute);
 app.use("/api/transactions", TransactionRoute);
 // Error handling middleware
