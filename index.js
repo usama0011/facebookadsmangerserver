@@ -33,7 +33,7 @@ app.get("/", (req, res) => {
 // Start router from here
 app.use("/api/newcampaing", newCampaingRoute);
 app.use("/api/adsset", adSetRoute);
-app.use("/api/campaings", UPloadCampaings);
+app.use("/api/leads", UPloadCampaings);
 app.use("/api/ads", AdRoute);
 app.use("/api/transactions", TransactionRoute);
 // Error handling middleware
