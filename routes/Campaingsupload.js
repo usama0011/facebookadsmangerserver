@@ -1,8 +1,7 @@
 import express from "express";
-import exceljs from "exceljs";
 import Lead from "../models/newcompaingmodel.js";
 const router = express.Router();
-import { Readable, Stream } from "stream"; // Use import for ES6 modules
+import { Stream } from "stream"; // Use import for ES6 modules
 import multer from "multer";
 import csv from "csv-parser";
 const storage = multer.memoryStorage();
@@ -31,14 +30,6 @@ router.post(
                 readableStream
                     .pipe(csvParser)
                     .on("data", (data) => {
-                        // Append agentId to each object before pushing to results
-                        if (data.mobile) {
-                            const mobileDigits = data.mobile.match(/\d{10}$/);
-                            data.mobile = mobileDigits ? mobileDigits[0] : "";
-                        }
-                        if (data.status) {
-                            data.status = data.status.toLowerCase();
-                        }
                         results.push(data);
                         console.log(data);
                     })
