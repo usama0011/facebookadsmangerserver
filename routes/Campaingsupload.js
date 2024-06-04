@@ -62,6 +62,7 @@ import multer from 'multer';
 import csvParser from 'csv-parser';
 import fs from 'fs';
 import NewCampaign from '../models/newcompaingmodel.js';
+import path from 'path';
 
 const router = express();
 
@@ -71,6 +72,9 @@ const upload = multer({ dest: 'uploads/' });
 
 // Route to handle CSV upload
 router.post('/upload', upload.single('file'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).send('No file uploaded.');
+    }
     const results = [];
     fs.createReadStream(req.file.path)
         .pipe(csvParser())

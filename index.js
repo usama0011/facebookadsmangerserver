@@ -26,6 +26,8 @@ try {
 const corsOptions = {
   origin: ['https://facebookadsmanger.vercel.app', 'http://localhost:5173'], // Replace with your frontend URL
   credentials: true, // Allow cookies and other credentials to be sent
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow necessary methods
+  allowedHeaders: ['Content-Type', 'Authorization'], // Allow necessary headers
 };
 
 app.use(cors(corsOptions));
