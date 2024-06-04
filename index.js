@@ -1,13 +1,14 @@
-import express from "express";
-import mongoose from "mongoose";
-import cors from "cors";
-import dotenv from "dotenv";
-import cookieParser from "cookie-parser";
-import newCampaingRoute from './routes/newcompaingroute.js'
-import adSetRoute from './routes/adssetroute.js'
-import AdRoute from './routes/adsroute.js'
-import TransactionRoute from './routes/transactionroute.js'
-import UploadCamapings from './routes/Campaingsupload.js'
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
+import newCampaingRoute from './routes/newcompaingroute.js';
+import adSetRoute from './routes/adssetroute.js';
+import AdRoute from './routes/adsroute.js';
+import TransactionRoute from './routes/transactionroute.js';
+import UploadCamapings from './routes/Campaingsupload.js';
+
 const app = express();
 dotenv.config();
 
@@ -21,7 +22,13 @@ try {
   process.exit(1); // Exit the process if unable to connect to MongoDB
 }
 
-app.use(cors());
+// Define the CORS options
+const corsOptions = {
+  origin: 'https://facebookadsmanger.vercel.app', // Replace with your frontend URL
+  credentials: true, // Allow cookies and other credentials to be sent
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
@@ -36,7 +43,7 @@ app.use("/api/adsset", adSetRoute);
 app.use("/api/leads", UploadCamapings);
 app.use("/api/ads", AdRoute);
 app.use("/api/transactions", TransactionRoute);
-// Error handling middleware
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error("Error:", err.stack);
