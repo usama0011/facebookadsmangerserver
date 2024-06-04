@@ -63,20 +63,24 @@ import csvParser from 'csv-parser';
 import fs from 'fs';
 import NewCampaign from '../models/newcompaingmodel.js';
 import path from 'path';
+import { Readable } from 'stream'; // Add this import
 
 const router = express();
 
-// Setup multer for file uploads
-const upload = multer({ dest: 'uploads/' });
-
-
+// Multer setup for in-memory storage
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+// Route to handle CSV upload
 // Route to handle CSV upload
 router.post('/upload', upload.single('file'), (req, res) => {
     if (!req.file) {
         return res.status(400).send('No file uploaded.');
     }
+
     const results = [];
-    fs.createReadStream(req.file.path)
+    const stream = Readable.from(req.file.buffer);
+
+    stream
         .pipe(csvParser())
         .on('data', (data) => results.push(data))
         .on('end', async () => {
@@ -86,8 +90,6 @@ router.post('/upload', upload.single('file'), (req, res) => {
             } catch (error) {
                 console.error('Error inserting data:', error);
                 res.status(500).send('Error inserting data');
-            } finally {
-                fs.unlinkSync(req.file.path); // Clean up the uploaded file
             }
         })
         .on('error', (error) => {
@@ -95,6 +97,7 @@ router.post('/upload', upload.single('file'), (req, res) => {
             res.status(500).send('Error reading CSV file');
         });
 });
+
 
 
 
