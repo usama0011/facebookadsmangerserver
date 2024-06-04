@@ -24,7 +24,7 @@ try {
 
 // Define the CORS options
 const corsOptions = {
-  origin: 'https://facebookadsmanger.vercel.app', // Replace with your frontend URL
+  origin: ['https://facebookadsmanger.vercel.app', 'http://localhost:5173'], // Replace with your frontend URL
   credentials: true, // Allow cookies and other credentials to be sent
 };
 
