@@ -38,7 +38,7 @@ const campaignSchema = new Schema(
       type: Number,
     },
     Costperresult: {
-      type: String,
+      type: Number,
     },
     Amountspent: {
       type: Number,
