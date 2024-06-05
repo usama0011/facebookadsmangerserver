@@ -31,7 +31,10 @@ router.get("/", async (req, res) => {
     }
 
     const campaigns = await Campaign.find(matchStage);
-
+    // If date range is not provided, return all campaigns
+    if (!startDate || !endDate) {
+      return res.status(200).json(campaigns);
+    }
     // Group campaigns by name
     const campaignMap = campaigns.reduce((acc, campaign) => {
       if (!acc[campaign.campaingname]) {
