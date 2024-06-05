@@ -51,7 +51,6 @@ router.get("/", async (req, res) => {
       if (campaigns.length > 1) {
         // Aggregate campaigns with the same name
         const aggregated = campaigns.reduce((acc, campaign) => {
-          acc.Budget += campaign.Budget;
           acc.Results += campaign.Results;
           acc.Reach += campaign.Reach;
           acc.Impressions += campaign.Impressions;
@@ -65,7 +64,7 @@ router.get("/", async (req, res) => {
           adname: campaigns[0].adname,
           Delivery: campaigns[0].Delivery,
           Bidstrategy: campaigns[0].Bidstrategy,
-          Budget: 0,
+          Budget: campaigns[0].Budget,
           Attributionsetting: campaigns[0].Attributionsetting,
           Results: 0,
           Reach: 0,
