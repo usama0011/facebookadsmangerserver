@@ -23,25 +23,25 @@ const campaignSchema = new Schema(
       type: String,
     },
     Budget: {
-      type: String,
+      type: Number,
     },
     Attributionsetting: {
       type: String,
     },
     Results: {
-      type: String,
+      type: Number,
     },
     Reach: {
-      type: String,
+      type: Number,
     },
     Impressions: {
-      type: String,
+      type: Number,
     },
     Costperresult: {
       type: String,
     },
     Amountspent: {
-      type: String,
+      type: Number,
     },
     Ends: {
       type: String,
