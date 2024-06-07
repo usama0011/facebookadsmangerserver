@@ -1,69 +1,8 @@
-// import express from "express";
-// import Lead from "../models/newcompaingmodel.js";
-// const router = express.Router();
-// import { Stream } from "stream"; // Use import for ES6 modules
-// import multer from "multer";
-// import csv from "csv-parser";
-// const storage = multer.memoryStorage();
-
-// const upload = multer({
-//     storage: storage,
-// });
-
-// router.post(
-//     "/singlefile/upload",
-//     upload.single("file"),
-//     async (req, res) => {
-//         try {
-//             if (!req.file) {
-//                 return res
-//                     .status(400)
-//                     .json({ success: false, message: "No file uploaded" });
-//             }
-
-//             const results = [];
-//             const fileBuffer = req.file.buffer.toString("utf8");
-//             const readableStream = Stream.Readable.from(fileBuffer.split("\n"));
-//             const csvParser = csv();
-
-//             await new Promise((resolve, reject) => {
-//                 readableStream
-//                     .pipe(csvParser)
-//                     .on("data", (data) => {
-//                         results.push(data);
-//                         console.log(data);
-//                     })
-//                     .on("end", resolve)
-//                     .on("error", reject);
-//             });
-
-//             await Lead.insertMany(results);
-
-//             res.status(200).json({
-//                 success: true,
-//                 message: "Camapings data successfully uploaded",
-//             });
-//         } catch (error) {
-//             res.status(500).json({
-//                 success: false,
-//                 message: "Error processing file or saving data to Camapings model",
-//                 errormsg: error.message,
-//             });
-//         }
-//     }
-// );
-
-// export default router;
-
-
-// Import required libraries
-import express from 'express';
-import multer from 'multer';
-import csvParser from 'csv-parser';
-import fs from 'fs';
-import NewCampaign from '../models/newcompaingmodel.js';
-import path from 'path';
-import { Readable } from 'stream'; // Add this import
+import express from "express";
+import multer from "multer";
+import csv from "csv-parser";
+import Lead from "../models/newcompaingmodel.js";
+import { Stream } from "stream";
 
 const router = express();
 
@@ -72,31 +11,65 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 // Route to handle CSV upload
 // Route to handle CSV upload
-router.post('/upload', upload.single('file'), (req, res) => {
-    if (!req.file) {
-        return res.status(400).send('No file uploaded.');
-    }
 
-    const results = [];
-    const stream = Readable.from(req.file.buffer);
+router.post("/upload", upload.single("file"), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: "No file uploaded" });
+        }
 
-    stream
-        .pipe(csvParser())
-        .on('data', (data) => results.push(data))
-        .on('end', async () => {
-            try {
-                await NewCampaign.insertMany(results);
-                res.status(200).send('File uploaded and data inserted successfully');
-            } catch (error) {
-                console.error('Error inserting data:', error);
-                res.status(500).send('Error inserting data');
-            }
-        })
-        .on('error', (error) => {
-            console.error('Error reading CSV file:', error);
-            res.status(500).send('Error reading CSV file');
+        const results = [];
+        const fileBuffer = req.file.buffer.toString("utf8");
+        const readableStream = Stream.Readable.from(fileBuffer.split("\n"));
+        const csvParser = csv();
+
+        await new Promise((resolve, reject) => {
+            readableStream
+                .pipe(csvParser)
+                .on("data", (data) => {
+                    console.log('Parsed data:', data);
+
+                    if (data.mobile) {
+                        const mobileDigits = data.mobile.match(/\d{10}$/);
+                        data.mobile = mobileDigits ? mobileDigits[0] : "";
+                    }
+                    if (data.status) {
+                        data.status = data.status.toLowerCase();
+                    }
+
+                    // Remove commas from numeric fields and convert to floats
+                    const numericFields = ["Reach", "Impressions", "Budget", "Results", "Costperresult", "Amountspent"];
+                    numericFields.forEach(field => {
+                        if (data[field]) {
+                            data[field] = parseFloat(data[field].replace(/,/g, ''));
+                        }
+                    });
+
+                    results.push(data);
+                })
+                .on("end", resolve)
+                .on("error", reject);
         });
+
+        console.log('Inserting data:', results);
+
+        await Lead.insertMany(results);
+
+        res.status(200).json({
+            success: true,
+            message: "Campaigns data successfully uploaded",
+        });
+    } catch (error) {
+        console.error('Error:', error.message);
+        console.log(error)
+        res.status(500).json({
+            success: false,
+            message: "Error inserting data",
+            errormsg: error.message,
+        });
+    }
 });
+
 
 
 
