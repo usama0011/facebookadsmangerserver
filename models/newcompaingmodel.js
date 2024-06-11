@@ -66,7 +66,16 @@ const campaignSchema = new Schema(
     },
     conversionrateranking: {
       type: String,
-    }
+    },
+    quoteheading: {
+      type: String,
+    },
+    quotetext: {
+      type: String,
+    },
+    frequency: {
+      type: Number,
+    },
   },
   { timestamps: true }
 );
