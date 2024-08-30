@@ -1,13 +1,9 @@
 import express from "express";
-import Campaign from '../models/newcompaingmodel.js'
+import Campaign from "../models/newcompaingmodel.js";
 
 const router = express.Router();
 
 // GET all campaigns
-
-
-
-
 
 router.get("/", async (req, res) => {
   const { startDate, endDate } = req.query;
@@ -17,20 +13,26 @@ router.get("/", async (req, res) => {
     let matchStage = {};
     if (startDate && endDate) {
       // Convert dates to 'YYYY-MM-DD' format
-      const parsedStartDate = new Date(startDate).toISOString().split('T')[0];
-      const parsedEndDate = new Date(endDate).toISOString().split('T')[0];
+      const parsedStartDate = new Date(startDate).toISOString().split("T")[0];
+      const parsedEndDate = new Date(endDate).toISOString().split("T")[0];
 
-      console.log("Parsed startDate:", parsedStartDate, "Parsed endDate:", parsedEndDate);
+      console.log(
+        "Parsed startDate:",
+        parsedStartDate,
+        "Parsed endDate:",
+        parsedEndDate
+      );
 
       matchStage = {
         entryDate: {
           $gte: parsedStartDate,
-          $lte: parsedEndDate
-        }
+          $lte: parsedEndDate,
+        },
       };
     }
 
     const campaigns = await Campaign.find(matchStage);
+    console.log(campaigns);
     // If date range is not provided, return all campaigns
     if (!startDate || !endDate) {
       return res.status(200).json(campaigns);
@@ -50,38 +52,43 @@ router.get("/", async (req, res) => {
     for (const [name, campaigns] of Object.entries(campaignMap)) {
       if (campaigns.length > 1) {
         // Aggregate campaigns with the same name
-        const aggregated = campaigns.reduce((acc, campaign) => {
-          acc.Results += campaign.Results;
-          acc.Reach += campaign.Reach;
-          acc.Impressions += campaign.Impressions;
-          acc.Amountspent += campaign.Amountspent;
-          return acc;
-        }, {
-          _id: campaigns[0]._id,
-          currentSwitch: campaigns[0].currentSwitch,
-          campaingname: campaigns[0].campaingname,
-          campainglink: campaigns[0].campainglink,
-          adname: campaigns[0].adname,
-          Delivery: campaigns[0].Delivery,
-          Bidstrategy: campaigns[0].Bidstrategy,
-          Budget: campaigns[0].Budget,
-          Attributionsetting: campaigns[0].Attributionsetting,
-          Results: 0,
-          Reach: 0,
-          Impressions: 0,
-          Costperresult: campaigns[0].Costperresult,
-          Amountspent: 0,
-          Ends: campaigns[0].Ends,
-          campaingImage: campaigns[0].campaingImage,
-          entryDate: campaigns[0].entryDate,
-          lastSignificent: campaigns[0].lastSignificent,
-          schedule: campaigns[0].schedule,
-          qualityRanking: campaigns[0].qualityRanking,
-          engagementrateranking: campaigns[0].engagementrateranking,
-          conversionrateranking: campaigns[0].conversionrateranking,
-          createdAt: campaigns[0].createdAt,
-          updatedAt: campaigns[0].updatedAt
-        });
+        const aggregated = campaigns.reduce(
+          (acc, campaign) => {
+            acc.Results += campaign.Results;
+            acc.Reach += campaign.Reach;
+            acc.Impressions += campaign.Impressions;
+            acc.Amountspent += campaign.Amountspent;
+            return acc;
+          },
+          {
+            _id: campaigns[0]._id,
+            currentSwitch: campaigns[0].currentSwitch,
+            campaingname: campaigns[0].campaingname,
+            campainglink: campaigns[0].campainglink,
+            adname: campaigns[0].adname,
+            Delivery: campaigns[0].Delivery,
+            Bidstrategy: campaigns[0].Bidstrategy,
+            Budget: campaigns[0].Budget,
+            Attributionsetting: campaigns[0].Attributionsetting,
+            Results: 0,
+            Reach: 0,
+            Impressions: 0,
+            Costperresult: campaigns[0].Costperresult,
+            Amountspent: 0,
+            Ends: campaigns[0].Ends,
+            campaingImage: campaigns[0].campaingImage,
+            entryDate: campaigns[0].entryDate,
+            lastSignificent: campaigns[0].lastSignificent,
+            schedule: campaigns[0].schedule,
+            qualityRanking: campaigns[0].qualityRanking,
+            engagementrateranking: campaigns[0].engagementrateranking,
+            conversionrateranking: campaigns[0].conversionrateranking,
+            createdAt: campaigns[0].createdAt,
+            updatedAt: campaigns[0].updatedAt,
+            quoteheading: campaigns[0].quoteheading, // Include the quoteheading
+            quotetext: campaigns[0].quotetext, // Include the quotetext
+          }
+        );
         aggregatedCampaigns.push(aggregated);
       } else {
         // Directly add unique campaigns
