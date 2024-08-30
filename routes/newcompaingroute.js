@@ -87,6 +87,7 @@ router.get("/", async (req, res) => {
             updatedAt: campaigns[0].updatedAt,
             quoteheading: campaigns[0].quoteheading, // Include the quoteheading
             quotetext: campaigns[0].quotetext, // Include the quotetext
+            frequency: campaigns[0].frequency, // Include the quotetext
           }
         );
         aggregatedCampaigns.push(aggregated);
