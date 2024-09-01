@@ -58,6 +58,14 @@ router.get("/", async (req, res) => {
             acc.Reach += campaign.Reach;
             acc.Impressions += campaign.Impressions;
             acc.Amountspent += campaign.Amountspent;
+            acc.Links_clicks += campaign.Links_clicks; // Sum Links_clicks
+            acc.clicksAll += campaign.clicksAll; // Sum clicksAll
+            // Add new logic
+            acc.CPM = Math.max(acc.CPM, campaign.CPM || 0);
+            acc.CPC = Math.max(acc.CPC, campaign.CPC || 0);
+            acc.CTR = Math.max(acc.CTR, campaign.CTR || 0);
+            acc.CTRALL = Math.max(acc.CTRALL, campaign.CTRALL || 0);
+            acc.CPCAll = Math.max(acc.CPCAll, campaign.CPCAll || 0);
             return acc;
           },
           {
@@ -87,7 +95,15 @@ router.get("/", async (req, res) => {
             updatedAt: campaigns[0].updatedAt,
             quoteheading: campaigns[0].quoteheading, // Include the quoteheading
             quotetext: campaigns[0].quotetext, // Include the quotetext
-            frequency: campaigns[0].frequency, // Include the quotetext
+            frequency: campaigns[0].frequency, // Include the frequency
+            // Initialize new fields with default values
+            CPM: campaigns[0].CPM || 0,
+            Links_clicks: 0,
+            CPC: campaigns[0].CPC || 0,
+            CTR: campaigns[0].CTR || 0,
+            clicksAll: 0,
+            CTRALL: campaigns[0].CTRALL || 0,
+            CPCAll: campaigns[0].CPCAll || 0,
           }
         );
         aggregatedCampaigns.push(aggregated);

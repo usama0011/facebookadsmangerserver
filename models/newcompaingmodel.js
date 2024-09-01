@@ -76,6 +76,28 @@ const campaignSchema = new Schema(
     frequency: {
       type: Number,
     },
+    //Below i add new fields
+    CPM: {
+      type: Number,
+    },
+    Links_clicks: {
+      type: Number,
+    },
+    CPC: {
+      type: Number,
+    },
+    CTR: {
+      type: Number,
+    },
+    clicksAll: {
+      type: Number,
+    },
+    CTRALL: {
+      type: Number,
+    },
+    CPCAll: {
+      type: Number,
+    },
   },
   { timestamps: true }
 );
