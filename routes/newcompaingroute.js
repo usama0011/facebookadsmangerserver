@@ -32,7 +32,6 @@ router.get("/", async (req, res) => {
     }
 
     const campaigns = await Campaign.find(matchStage);
-    console.log(campaigns);
     // If date range is not provided, return all campaigns
     if (!startDate || !endDate) {
       return res.status(200).json(campaigns);
@@ -58,8 +57,9 @@ router.get("/", async (req, res) => {
             acc.Reach += campaign.Reach;
             acc.Impressions += campaign.Impressions;
             acc.Amountspent += campaign.Amountspent;
-            acc.LinksClicks += campaign.LinksClicks; // Sum LinksClicks
-            acc.clicksAll += campaign.clicksAll; // Sum clicksAll
+            acc.LinksClicks += campaign.LinksClicks || 0; // Sum LinksClicks
+            acc.clicksAll += campaign.clicksAll || 0; // Sum clicksAll
+
             // Add new logic
             acc.CPM = Math.max(acc.CPM, campaign.CPM || 0);
             acc.CPC = Math.max(acc.CPC, campaign.CPC || 0);
@@ -126,6 +126,18 @@ router.get("/:id", async (req, res) => {
   try {
     const id = req.params.id;
     const campaign = await Campaign.findById(id);
+    if (!campaign) {
+      return res.status(404).json({ message: "Campaign not found" });
+    }
+    res.status(200).json(campaign);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get("/testroute/facebook", async (req, res) => {
+  try {
+    const campaign = await Campaign.find();
     if (!campaign) {
       return res.status(404).json({ message: "Campaign not found" });
     }
