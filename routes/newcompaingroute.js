@@ -58,7 +58,7 @@ router.get("/", async (req, res) => {
             acc.Reach += campaign.Reach;
             acc.Impressions += campaign.Impressions;
             acc.Amountspent += campaign.Amountspent;
-            acc.Links_clicks += campaign.Links_clicks; // Sum Links_clicks
+            acc.LinksClicks += campaign.LinksClicks; // Sum LinksClicks
             acc.clicksAll += campaign.clicksAll; // Sum clicksAll
             // Add new logic
             acc.CPM = Math.max(acc.CPM, campaign.CPM || 0);
@@ -98,7 +98,7 @@ router.get("/", async (req, res) => {
             frequency: campaigns[0].frequency, // Include the frequency
             // Initialize new fields with default values
             CPM: campaigns[0].CPM || 0,
-            Links_clicks: 0,
+            LinksClicks: 0,
             CPC: campaigns[0].CPC || 0,
             CTR: campaigns[0].CTR || 0,
             clicksAll: 0,

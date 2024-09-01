@@ -80,7 +80,7 @@ const campaignSchema = new Schema(
     CPM: {
       type: Number,
     },
-    Links_clicks: {
+    LinksClicks: {
       type: Number,
     },
     CPC: {
