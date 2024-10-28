@@ -1,14 +1,14 @@
-import express from 'express';
-import mongoose from 'mongoose';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import cookieParser from 'cookie-parser';
-import newCampaingRoute from './routes/newcompaingroute.js';
-import adSetRoute from './routes/adssetroute.js';
-import AdRoute from './routes/adsroute.js';
-import TransactionRoute from './routes/transactionroute.js';
-import UploadCamapings from './routes/Campaingsupload.js';
-
+import express from "express";
+import mongoose from "mongoose";
+import cors from "cors";
+import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+import newCampaingRoute from "./routes/newcompaingroute.js";
+import adSetRoute from "./routes/adssetroute.js";
+import AdRoute from "./routes/adsroute.js";
+import TransactionRoute from "./routes/transactionroute.js";
+import UploadCamapings from "./routes/Campaingsupload.js";
+import currentAccountRoutes from "./routes/currentaccountroute.js";
 const app = express();
 dotenv.config();
 
@@ -24,10 +24,10 @@ try {
 
 // Define the CORS options
 const corsOptions = {
-  origin: ['https://facebookadsmanger.vercel.app', 'http://localhost:5173'], // Replace with your frontend URL
+  origin: ["https://facebookadsmanger.vercel.app", "http://localhost:5173"], // Replace with your frontend URL
   credentials: true, // Allow cookies and other credentials to be sent
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow necessary methods
-  allowedHeaders: ['Content-Type', 'Authorization'], // Allow necessary headers
+  methods: ["GET", "POST", "PUT", "DELETE"], // Allow necessary methods
+  allowedHeaders: ["Content-Type", "Authorization"], // Allow necessary headers
 };
 
 app.use(cors(corsOptions));
@@ -45,6 +45,7 @@ app.use("/api/adsset", adSetRoute);
 app.use("/api/leads", UploadCamapings);
 app.use("/api/ads", AdRoute);
 app.use("/api/transactions", TransactionRoute);
+app.use("/api/currentAccount", currentAccountRoutes); // Route for currentAccount operations
 
 // Error handling middleware
 app.use((err, req, res, next) => {
