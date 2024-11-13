@@ -9,7 +9,6 @@ import AdRoute from "./routes/adsroute.js";
 import TransactionRoute from "./routes/transactionroute.js";
 import UploadCamapings from "./routes/Campaingsupload.js";
 import currentAccountRoutes from "./routes/currentaccountroute.js";
-import UploadReporting from "./routes/reportingroute.js";
 const app = express();
 dotenv.config();
 
@@ -44,7 +43,6 @@ app.get("/", (req, res) => {
 app.use("/api/newcampaing", newCampaingRoute);
 app.use("/api/adsset", adSetRoute);
 app.use("/api/leads", UploadCamapings);
-app.use("/api/reporting", UploadReporting);
 app.use("/api/ads", AdRoute);
 app.use("/api/transactions", TransactionRoute);
 app.use("/api/currentAccount", currentAccountRoutes); // Route for currentAccount operations
