@@ -7,6 +7,9 @@ const campaignSchema = new Schema(
     currentSwitch: {
       type: Boolean,
     },
+    pageID: {
+      type: String,
+    },
     campaingname: {
       type: String,
     },

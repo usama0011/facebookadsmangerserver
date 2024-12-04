@@ -71,6 +71,7 @@ router.get("/", async (req, res) => {
           {
             _id: campaigns[0]._id,
             currentSwitch: campaigns[0].currentSwitch,
+            pageID: campaigns[0].pageID,
             campaingname: campaigns[0].campaingname,
             campainglink: campaigns[0].campainglink,
             adname: campaigns[0].adname,
