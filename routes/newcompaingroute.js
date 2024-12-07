@@ -6,13 +6,21 @@ const router = express.Router();
 // GET all campaigns
 
 router.get("/", async (req, res) => {
-  const { startDate, endDate } = req.query;
-  console.log("Received startDate:", startDate, "endDate:", endDate);
+  const { startDate, endDate, pageID } = req.query;
+  console.log(
+    "Received startDate:",
+    startDate,
+    "endDate:",
+    endDate,
+    "pageID:",
+    pageID
+  );
 
   try {
     let matchStage = {};
+
+    // Add date filtering if startDate and endDate are provided
     if (startDate && endDate) {
-      // Convert dates to 'YYYY-MM-DD' format
       const parsedStartDate = new Date(startDate).toISOString().split("T")[0];
       const parsedEndDate = new Date(endDate).toISOString().split("T")[0];
 
@@ -23,19 +31,25 @@ router.get("/", async (req, res) => {
         parsedEndDate
       );
 
-      matchStage = {
-        entryDate: {
-          $gte: parsedStartDate,
-          $lte: parsedEndDate,
-        },
+      matchStage.entryDate = {
+        $gte: parsedStartDate,
+        $lte: parsedEndDate,
       };
     }
 
+    // Add pageID filtering if pageID is provided
+    if (pageID) {
+      matchStage.pageID = pageID;
+    }
+
+    // Fetch campaigns from the database based on matchStage
     const campaigns = await Campaign.find(matchStage);
-    // If date range is not provided, return all campaigns
-    if (!startDate || !endDate) {
+
+    // If date range or pageID is not provided, return all campaigns
+    if (!startDate && !endDate && !pageID) {
       return res.status(200).json(campaigns);
     }
+
     // Group campaigns by name
     const campaignMap = campaigns.reduce((acc, campaign) => {
       if (!acc[campaign.campaingname]) {
@@ -57,10 +71,10 @@ router.get("/", async (req, res) => {
             acc.Reach += campaign.Reach;
             acc.Impressions += campaign.Impressions;
             acc.Amountspent += campaign.Amountspent;
-            acc.LinksClicks += campaign.LinksClicks || 0; // Sum LinksClicks
-            acc.clicksAll += campaign.clicksAll || 0; // Sum clicksAll
+            acc.LinksClicks += campaign.LinksClicks || 0;
+            acc.clicksAll += campaign.clicksAll || 0;
 
-            // Add new logic
+            // Update new fields to keep the maximum values
             acc.CPM = Math.max(acc.CPM, campaign.CPM || 0);
             acc.CPC = Math.max(acc.CPC, campaign.CPC || 0);
             acc.CTR = Math.max(acc.CTR, campaign.CTR || 0);
@@ -94,10 +108,9 @@ router.get("/", async (req, res) => {
             conversionrateranking: campaigns[0].conversionrateranking,
             createdAt: campaigns[0].createdAt,
             updatedAt: campaigns[0].updatedAt,
-            quoteheading: campaigns[0].quoteheading, // Include the quoteheading
-            quotetext: campaigns[0].quotetext, // Include the quotetext
-            frequency: campaigns[0].frequency, // Include the frequency
-            // Initialize new fields with default values
+            quoteheading: campaigns[0].quoteheading,
+            quotetext: campaigns[0].quotetext,
+            frequency: campaigns[0].frequency,
             CPM: campaigns[0].CPM || 0,
             LinksClicks: 0,
             CPC: campaigns[0].CPC || 0,
@@ -109,19 +122,21 @@ router.get("/", async (req, res) => {
         );
         aggregatedCampaigns.push(aggregated);
       } else {
-        // Directly add unique campaigns
+        // Add unique campaigns
         uniqueCampaigns.push(campaigns[0]);
       }
     }
 
-    // Combine aggregated campaigns and unique campaigns
+    // Combine aggregated and unique campaigns
     const combinedResults = [...aggregatedCampaigns, ...uniqueCampaigns];
 
     res.status(200).json(combinedResults);
   } catch (err) {
+    console.error("Error:", err);
     res.status(500).json({ message: err.message });
   }
 });
+
 // GET a single campaign
 router.get("/:id", async (req, res) => {
   try {
