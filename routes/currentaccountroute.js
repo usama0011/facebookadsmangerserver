@@ -55,9 +55,10 @@ router.put("/:id", async (req, res) => {
     return res.status(400).json({ message: "Invalid ID format" });
 
   try {
+    // Pass the data directly instead of wrapping it in an object
     const updatedAccount = await CurrentAccount.findByIdAndUpdate(
       id,
-      { updatedata },
+      updatedata, // Use updatedata directly
       { new: true, runValidators: true }
     );
     if (!updatedAccount)
