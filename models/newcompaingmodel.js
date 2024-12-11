@@ -10,6 +10,12 @@ const campaignSchema = new Schema(
     pageID: {
       type: String,
     },
+    sponsorName: {
+      type: String,
+    },
+    sponsorImageURL: {
+      type: String,
+    },
     campaingname: {
       type: String,
     },
