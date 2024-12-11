@@ -31,10 +31,14 @@ router.get("/:id", async (req, res) => {
 
 // Create a new account
 router.post("/", async (req, res) => {
-  const { currentAccountname } = req.body;
+  const { currentAccountname, mainAccountname, mainAccountImage } = req.body;
 
   try {
-    const newAccount = new CurrentAccount({ currentAccountname });
+    const newAccount = new CurrentAccount({
+      currentAccountname,
+      mainAccountname,
+      mainAccountImage,
+    });
     await newAccount.save();
     res.status(201).json(newAccount);
   } catch (error) {
@@ -45,7 +49,7 @@ router.post("/", async (req, res) => {
 // Update an existing account by ID
 router.put("/:id", async (req, res) => {
   const { id } = req.params;
-  const { currentAccountname } = req.body;
+  const updatedata = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(id))
     return res.status(400).json({ message: "Invalid ID format" });
@@ -53,7 +57,7 @@ router.put("/:id", async (req, res) => {
   try {
     const updatedAccount = await CurrentAccount.findByIdAndUpdate(
       id,
-      { currentAccountname },
+      { updatedata },
       { new: true, runValidators: true }
     );
     if (!updatedAccount)
