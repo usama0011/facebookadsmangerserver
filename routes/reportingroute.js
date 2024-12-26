@@ -1,65 +1,73 @@
 import express from "express";
-import fs from "fs";
 import multer from "multer";
-import csvParser from "csv-parser";
-import Campaign from "../models/reportingmodel.js";
+import csv from "csv-parser";
+import { Readable } from "stream";
+import Reporting from "../models/reportingmodel.js";
 
 const router = express.Router();
 
-// Configure multer for file uploads
-const upload = multer({ dest: "uploads/" });
+// Configure multer to handle file uploads in memory
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
-// Stream-based upload and CSV parsing route
-router.post("/upload", upload.single("file"), (req, res) => {
-  // Stream-based approach for improved memory management
-  const campaigns = [];
-  const filePath = req.file.path;
-
-  const fileStream = fs
-    .createReadStream(filePath)
-    .pipe(csvParser())
-    .on("data", (row) => {
-      campaigns.push(row);
-    })
-    .on("end", async () => {
-      try {
-        // Use Mongoose insertMany to add campaigns to the database
-        await Campaign.insertMany(campaigns);
-        res.status(200).json({ message: "CSV file uploaded and data stored!" });
-      } catch (err) {
-        res
-          .status(400)
-          .json({ error: "Failed to store data", details: err.message });
-      } finally {
-        // Remove the uploaded file after processing
-        fs.unlink(filePath, (err) => {
-          if (err) console.error("Error deleting file:", err);
-        });
-      }
-    })
-    .on("error", (err) => {
-      res
-        .status(500)
-        .json({ error: "Error reading CSV file", details: err.message });
-      // Ensure file is deleted if an error occurs
-      fs.unlink(filePath, (deleteErr) => {
-        if (deleteErr)
-          console.error("Error deleting file after failure:", deleteErr);
-      });
-    });
-});
-
-// Get all campaigns route
-router.get("/", async (req, res) => {
+// Route to upload CSV and save data to the database
+router.post("/upload", upload.single("file"), async (req, res) => {
   try {
-    const campaigns = await Campaign.find({});
-    res.status(200).json(campaigns);
+    // Check if the file is provided
+    if (!req.file) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No file uploaded" });
+    }
+
+    // Prepare to parse the CSV
+    const fileBuffer = req.file.buffer.toString("utf8");
+    const readableStream = Readable.from(fileBuffer);
+
+    const results = [];
+
+    // Parse the CSV data
+    await new Promise((resolve, reject) => {
+      readableStream
+        .pipe(csv())
+        .on("data", (data) => {
+          // Process fields if needed (e.g., remove unwanted characters)
+          Object.keys(data).forEach((key) => {
+            data[key] = data[key]?.trim();
+          });
+
+          results.push(data);
+        })
+        .on("end", resolve)
+        .on("error", reject);
+    });
+
+    // Save data to the database
+    await Reporting.insertMany(results);
+
+    res.status(200).json({
+      success: true,
+      message: "CSV data uploaded and saved successfully",
+      count: results.length,
+    });
   } catch (error) {
+    console.error("Error uploading CSV:", error);
     res.status(500).json({
       success: false,
-      message: "Error retrieving data",
+      message: "Failed to upload CSV data",
       error: error.message,
     });
+  }
+});
+
+// Get all data
+router.get("/get-data", async (req, res) => {
+  try {
+    const data = await Reporting.find(); // Fetch all data from the Reporting collection
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error fetching data:", error.message);
+    res.status(500).json({ error: "Failed to fetch data" });
   }
 });
 
