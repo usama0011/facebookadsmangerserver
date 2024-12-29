@@ -60,224 +60,328 @@ router.post("/upload", upload.single("file"), async (req, res) => {
   }
 });
 
-// Route to fetch paginated data dynamically
-router.get("/get-data", async (req, res) => {
+router.get("/reporting/summed", async (req, res) => {
   try {
-    // Extract pagination parameters from the query
-    const { page = 1, pageSize = 50 } = req.query;
+    // Extract filter parameters from query
+    const { campaignName, startDate, endDate } = req.query;
 
-    // Fetch all the data from the database
-    const allData = await Reporting.find();
+    // Build the filter criteria dynamically
+    const filterCriteria = {};
 
-    // Perform calculations for each column before pagination
-    const calculateCampaignSums = (data, columnKey, divideBy = 1) => {
-      const campaignSums = {};
+    if (campaignName) {
+      filterCriteria["Campaign Name"] = campaignName;
+    }
 
-      data.forEach((row) => {
-        const pageName = row["Page Name"];
-        const entryDate = row["Entry Date"];
-        const campaignName = row["Campaign Name"];
-        const impressionDevice = row["Impression Device"];
-        const columnValue = parseFloat(row[columnKey] || 0);
+    if (startDate && endDate) {
+      filterCriteria["Entry Date"] = {
+        $gte: startDate,
+        $lte: endDate,
+      };
+    }
 
-        if (!campaignSums[pageName]) {
-          campaignSums[pageName] = {};
-        }
+    // Filter the data based on criteria before aggregation
+    const filteredData = await Reporting.find(filterCriteria);
 
-        if (!campaignSums[pageName][entryDate]) {
-          campaignSums[pageName][entryDate] = {};
-        }
+    let aggregatedData = await Reporting.aggregate([
+      {
+        $match: filterCriteria,
+      },
+      {
+        $addFields: {
+          normalizedPlacement: { $toLower: { $trim: { input: "$Placement" } } },
+          normalizedImpressionDevice: {
+            $toLower: { $trim: { input: "$Impression Device" } },
+          },
+          convertedAmountSpent: {
+            $convert: {
+              input: "$Amount Spent",
+              to: "double",
+              onError: 0,
+              onNull: 0,
+            },
+          },
+          convertedImpressions: {
+            $convert: {
+              input: "$Impressions",
+              to: "double",
+              onError: 0,
+              onNull: 0,
+            },
+          },
+          convertedLinkClicks: {
+            $convert: {
+              input: "$Link Clicks",
+              to: "double",
+              onError: 0,
+              onNull: 0,
+            },
+          },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            "Page ID": "$Page ID",
+            "Page Name": "$Page Name",
+            "Campaign Name": "$Campaign Name",
+            "Ad Set Name": "$Ad Set Name",
+            "Ad Name": "$Ad Name",
+            "Ad Creative": "$Ad Creative",
+            "Impression Device": "$normalizedImpressionDevice",
+            Placement: "$normalizedPlacement",
+          },
+          "Amount Spent": { $sum: "$convertedAmountSpent" },
+          Impressions: { $sum: "$convertedImpressions" },
+          Reach: { $sum: "$Reach" },
+          "Link Clicks": { $sum: "$convertedLinkClicks" },
+        },
+      },
+      {
+        $addFields: {
+          CPC: {
+            $cond: [
+              { $eq: ["$Link Clicks", 0] },
+              null,
+              { $divide: ["$Amount Spent", "$Link Clicks"] },
+            ],
+          },
+          CPM: {
+            $cond: [
+              { $eq: ["$Impressions", 0] },
+              null,
+              {
+                $multiply: [
+                  { $divide: ["$Amount Spent", "$Impressions"] },
+                  1000,
+                ],
+              },
+            ],
+          },
+          CTR: {
+            $cond: [
+              { $eq: ["$Impressions", 0] },
+              null,
+              {
+                $multiply: [{ $divide: ["$Link Clicks", "$Impressions"] }, 100],
+              },
+            ],
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          "Page ID": "$_id.Page ID",
+          "Page Name": "$_id.Page Name",
+          "Campaign Name": "$_id.Campaign Name",
+          "Ad Set Name": "$_id.Ad Set Name",
+          "Ad Name": "$_id.Ad Name",
+          "Ad Creative": "$_id.Ad Creative",
+          "Impression Device": "$_id.Impression Device",
+          Placement: "$_id.Placement",
+          "Amount Spent": 1,
+          Impressions: 1,
+          Reach: 1,
+          "Link Clicks": 1,
+          CPC: 1,
+          CPM: 1,
+          CTR: 1,
+        },
+      },
+      {
+        $sort: {
+          "Page Name": 1,
+          "Campaign Name": 1,
+          "Ad Set Name": 1,
+          "Ad Name": 1,
+          "Impression Device": 1,
+          Placement: 1,
+        },
+      },
+    ]);
 
-        if (!campaignSums[pageName][entryDate][campaignName]) {
-          campaignSums[pageName][entryDate][campaignName] = {
-            sum: 0,
-            devices: new Set(),
+    // Sum metrics for each device under "all" placement for each campaign
+    const campaignDeviceTotals = {};
+
+    aggregatedData.forEach((entry) => {
+      if (entry.Placement === "all") {
+        const campaignKey = entry["Campaign Name"];
+        const deviceKey = entry["Impression Device"];
+
+        if (!campaignDeviceTotals[campaignKey]) {
+          campaignDeviceTotals[campaignKey] = {
+            "device: android smartphone": {
+              amountSpent: 0,
+              impressions: 0,
+              reach: 0,
+              linkClicks: 0,
+            },
+            "device: android tablet": {
+              amountSpent: 0,
+              impressions: 0,
+              reach: 0,
+              linkClicks: 0,
+            },
+            "device: desktop": {
+              amountSpent: 0,
+              impressions: 0,
+              reach: 0,
+              linkClicks: 0,
+            },
+            "device: ipad": {
+              amountSpent: 0,
+              impressions: 0,
+              reach: 0,
+              linkClicks: 0,
+            },
+            "device: iphone": {
+              amountSpent: 0,
+              impressions: 0,
+              reach: 0,
+              linkClicks: 0,
+            },
           };
         }
 
-        // Only sum the first occurrence of each device for the campaign
-        if (
-          !campaignSums[pageName][entryDate][campaignName].devices.has(
-            impressionDevice
-          )
-        ) {
-          campaignSums[pageName][entryDate][campaignName].sum += columnValue;
-          campaignSums[pageName][entryDate][campaignName].devices.add(
-            impressionDevice
-          );
+        if (campaignDeviceTotals[campaignKey][deviceKey] != null) {
+          campaignDeviceTotals[campaignKey][deviceKey].amountSpent +=
+            entry["Amount Spent"];
+          campaignDeviceTotals[campaignKey][deviceKey].impressions +=
+            entry.Impressions;
+          campaignDeviceTotals[campaignKey][deviceKey].reach += entry.Reach;
+          campaignDeviceTotals[campaignKey][deviceKey].linkClicks +=
+            entry["Link Clicks"];
         }
-      });
-
-      // Divide the sums if needed
-      Object.keys(campaignSums).forEach((pageName) => {
-        Object.keys(campaignSums[pageName]).forEach((entryDate) => {
-          Object.keys(campaignSums[pageName][entryDate]).forEach(
-            (campaignName) => {
-              campaignSums[pageName][entryDate][campaignName].sum =
-                campaignSums[pageName][entryDate][campaignName].sum / divideBy;
-            }
-          );
-        });
-      });
-
-      return campaignSums;
-    };
-
-    const calculateCampaignCount = (data) => {
-      const campaignCounts = {};
-
-      data.forEach((row) => {
-        const pageName = row["Page Name"];
-        const entryDate = row["Entry Date"];
-        const campaignName = row["Campaign Name"];
-
-        if (!campaignCounts[pageName]) {
-          campaignCounts[pageName] = new Set();
-        }
-
-        // Use a combination of campaignName and entryDate to ensure uniqueness
-        campaignCounts[pageName].add(`${campaignName}_${entryDate}`);
-      });
-
-      // Convert sets to counts
-      Object.keys(campaignCounts).forEach((pageName) => {
-        campaignCounts[pageName] = campaignCounts[pageName].size;
-      });
-      console.log("count sir usama", campaignCounts);
-      return campaignCounts;
-    };
-
-    const amountSpentSums = calculateCampaignSums(allData, "Amount Spent");
-    const impressionsSums = calculateCampaignSums(allData, "Impressions");
-    const reachSums = calculateCampaignSums(allData, "Reach");
-    const resultsSums = calculateCampaignSums(allData, "Results");
-    const linkClicksSums = calculateCampaignSums(allData, "Link Clicks");
-
-    const cpcSums = calculateCampaignSums(
-      allData,
-      "CPC (cost per link click)",
-      5
-    );
-    const cpmSums = calculateCampaignSums(
-      allData,
-      "CPM (cost per 1,000 impressions)",
-      5
-    );
-    const ctrSums = calculateCampaignSums(allData, "CTR (all)", 5);
-
-    // Calculate totals for each column by Page Name
-    const calculatePageTotals = (data, columnKey) => {
-      const pageTotals = {};
-
-      data.forEach((row) => {
-        const pageName = row["Page Name"];
-        const columnValue = parseFloat(row[columnKey] || 0);
-
-        if (!pageTotals[pageName]) {
-          pageTotals[pageName] = 0;
-        }
-
-        pageTotals[pageName] += columnValue;
-      });
-
-      return pageTotals;
-    };
-
-    const amountSpentTotals = calculatePageTotals(allData, "Amount Spent");
-    const impressionsTotals = calculatePageTotals(allData, "Impressions");
-    const reachTotals = calculatePageTotals(allData, "Reach");
-    const resultsTotals = calculatePageTotals(allData, "Results");
-    const linkClicksTotals = calculatePageTotals(allData, "Link Clicks");
-    const cpcTotals = calculatePageTotals(allData, "CPC (cost per link click)");
-    const cpmTotals = calculatePageTotals(
-      allData,
-      "CPM (cost per 1,000 impressions)"
-    );
-    const ctrTotals = calculatePageTotals(allData, "CTR (all)");
-
-    const campaignCounts = calculateCampaignCount(allData);
-
-    const processedData = allData.map((row, index) => {
-      const pageName = row["Page Name"];
-      const entryDate = row["Entry Date"];
-      const campaignName = row["Campaign Name"];
-      const isFirstRow =
-        index ===
-        allData.findIndex(
-          (r) =>
-            r["Page Name"] === pageName &&
-            r["Entry Date"] === entryDate &&
-            r["Campaign Name"] === campaignName
-        );
-
-      const columns = [
-        { key: "Amount Spent", sums: amountSpentSums },
-        { key: "Impressions", sums: impressionsSums },
-        { key: "Reach", sums: reachSums },
-        { key: "Results", sums: resultsSums },
-        { key: "Link Clicks", sums: linkClicksSums },
-        { key: "CPC (cost per link click)", sums: cpcSums },
-        { key: "CPM (cost per 1,000 impressions)", sums: cpmSums },
-        { key: "CTR (all)", sums: ctrSums },
-      ];
-
-      columns.forEach(({ key, sums }) => {
-        if (isFirstRow && (!row[key] || row[key] === "")) {
-          const sum =
-            sums[pageName]?.[entryDate]?.[campaignName]?.sum?.toFixed(2) || 0;
-          row[key] = sum;
-
-          for (let i = 1; i <= 3; i++) {
-            const nextRow = allData[index + i];
-            if (
-              nextRow &&
-              nextRow["Page Name"] === pageName &&
-              nextRow["Entry Date"] === entryDate &&
-              nextRow["Campaign Name"] === campaignName &&
-              (!nextRow[key] || nextRow[key] === "")
-            ) {
-              nextRow[key] = sum;
-            } else {
-              break;
-            }
-          }
-        }
-      });
-
-      // Insert page totals in the first row of the page
-      if (index === allData.findIndex((r) => r["Page Name"] === pageName)) {
-        const campaignCount = campaignCounts[pageName] || 1;
-        row["Amount Spent"] = amountSpentTotals[pageName]?.toFixed(2) || "0";
-        row["Impressions"] = impressionsTotals[pageName]?.toFixed(2) || "0";
-        row["Reach"] = reachTotals[pageName]?.toFixed(2) || "0";
-        row["Results"] = resultsTotals[pageName]?.toFixed(2) || "0";
-        row["Link Clicks"] = linkClicksTotals[pageName]?.toFixed(2) || "0";
-        row["CPC (cost per link click)"] =
-          (cpcTotals[pageName] / campaignCount)?.toFixed(2) || "0";
-        row["CPM (cost per 1,000 impressions)"] =
-          (cpmTotals[pageName] / campaignCount)?.toFixed(2) || "0";
-        row["CTR (all)"] =
-          (ctrTotals[pageName] / campaignCount)?.toFixed(2) || "0";
       }
-
-      return row;
     });
 
-    // Apply pagination after processing the data
-    const paginatedData = processedData.slice(
-      (page - 1) * pageSize,
-      page * pageSize
+    // Sum all device totals under each campaign for each metric
+    const campaignTotals = {};
+    Object.keys(campaignDeviceTotals).forEach((campaignKey) => {
+      campaignTotals[campaignKey] = {
+        amountSpent: 0,
+        impressions: 0,
+        reach: 0,
+        linkClicks: 0,
+        cpc: null,
+        cpm: null,
+        ctr: null,
+      };
+
+      let totalImpressions = 0;
+      let totalLinkClicks = 0;
+      let totalAmountSpent = 0;
+
+      Object.values(campaignDeviceTotals[campaignKey]).forEach(
+        (deviceTotals) => {
+          campaignTotals[campaignKey].amountSpent += deviceTotals.amountSpent;
+          campaignTotals[campaignKey].impressions += deviceTotals.impressions;
+          campaignTotals[campaignKey].reach += deviceTotals.reach;
+          campaignTotals[campaignKey].linkClicks += deviceTotals.linkClicks;
+
+          totalImpressions += deviceTotals.impressions;
+          totalLinkClicks += deviceTotals.linkClicks;
+          totalAmountSpent += deviceTotals.amountSpent;
+        }
+      );
+
+      // Calculate CPC, CPM, CTR
+      campaignTotals[campaignKey].cpc = totalLinkClicks
+        ? totalAmountSpent / totalLinkClicks
+        : null;
+      campaignTotals[campaignKey].cpm = totalImpressions
+        ? (totalAmountSpent / totalImpressions) * 1000
+        : null;
+      campaignTotals[campaignKey].ctr = totalImpressions
+        ? (totalLinkClicks / totalImpressions) * 100
+        : null;
+    });
+
+    // Update the empty cells under each campaign with the summed values
+    aggregatedData = aggregatedData.map((entry) => {
+      if (
+        entry["Amount Spent"] === 0 &&
+        entry.Impressions === 0 &&
+        entry.Reach === 0 &&
+        entry["Link Clicks"] === 0
+      ) {
+        const campaignKey = entry["Campaign Name"];
+        if (campaignTotals[campaignKey] != null) {
+          entry["Amount Spent"] = campaignTotals[campaignKey].amountSpent;
+          entry.Impressions = campaignTotals[campaignKey].impressions;
+          entry.Reach = campaignTotals[campaignKey].reach;
+          entry["Link Clicks"] = campaignTotals[campaignKey].linkClicks;
+          entry.CPC = campaignTotals[campaignKey].cpc;
+          entry.CPM = campaignTotals[campaignKey].cpm;
+          entry.CTR = campaignTotals[campaignKey].ctr;
+        }
+      }
+      return entry;
+    });
+    // Generate the summary row for each unique Page Name
+    const pageSummaryRows = [];
+    const uniquePageNames = new Set(
+      aggregatedData.map((entry) => entry["Page Name"])
     );
 
-    res.status(200).json({
-      data: paginatedData,
-      total: allData.length,
-      currentPage: parseInt(page),
-      pageSize: parseInt(pageSize),
+    uniquePageNames.forEach((pageName) => {
+      const campaigns = aggregatedData.filter(
+        (entry) => entry["Page Name"] === pageName
+      );
+
+      const processedCampaignNames = new Set();
+      let totalAmountSpent = 0;
+      let totalImpressions = 0;
+      let totalReach = 0;
+      let totalLinkClicks = 0;
+
+      campaigns.forEach((campaign) => {
+        if (!processedCampaignNames.has(campaign["Campaign Name"])) {
+          totalAmountSpent += campaign["Amount Spent"];
+          totalImpressions += campaign.Impressions;
+          totalReach += campaign.Reach;
+          totalLinkClicks += campaign["Link Clicks"];
+          processedCampaignNames.add(campaign["Campaign Name"]);
+        }
+      });
+      // Calculate CPC, CPM, and CTR
+      const cpc = totalLinkClicks > 0 ? totalAmountSpent / totalLinkClicks : 0;
+      const cpm =
+        totalImpressions > 0 ? (totalAmountSpent / totalImpressions) * 1000 : 0;
+      const ctr =
+        totalImpressions > 0 ? (totalLinkClicks / totalImpressions) * 100 : 0;
+
+      pageSummaryRows.push({
+        "Page Name": pageName,
+        "Campaign Name": "All",
+        "Ad Set Name": "All",
+        "Ad Name": "All",
+        "Ad Creative": "All",
+        "Impression Device": "All",
+        Placement: "All",
+        "Amount Spent": totalAmountSpent,
+        Impressions: totalImpressions,
+        Reach: totalReach,
+        "Link Clicks": totalLinkClicks,
+        CPC: cpc,
+        CPM: cpm,
+        CTR: ctr,
+      });
     });
+
+    aggregatedData = [...pageSummaryRows, ...aggregatedData];
+    // Sort to ensure summary rows remain at the top
+    aggregatedData.sort((a, b) => {
+      if (a["Campaign Name"] === "All" && b["Campaign Name"] !== "All")
+        return -1;
+      if (b["Campaign Name"] === "All" && a["Campaign Name"] !== "All")
+        return 1;
+      return 0;
+    });
+    res.status(200).json(aggregatedData);
   } catch (error) {
-    console.error("Error fetching data:", error.message);
-    res.status(500).json({ error: "Failed to fetch data" });
+    console.error("Error fetching summed reporting data:", error);
+    res.status(500).json({ error: "Failed to fetch reporting data" });
   }
 });
 
