@@ -90,7 +90,18 @@ router.get("/reporting/summed", async (req, res) => {
         $addFields: {
           normalizedPlacement: { $toLower: { $trim: { input: "$Placement" } } },
           normalizedImpressionDevice: {
-            $toLower: { $trim: { input: "$Impression Device" } },
+            $cond: [
+              { $eq: ["$Impression Device", "all"] },
+              "All", // Ensure "All" is capitalized properly
+              { $toLower: { $trim: { input: "$Impression Device" } } },
+            ],
+          },
+          validAdCreative: {
+            $cond: [
+              { $regexMatch: { input: "$Ad Creative", regex: /^\{.*\}$/ } },
+              "$Ad Creative",
+              null,
+            ],
           },
           convertedAmountSpent: {
             $convert: {
@@ -370,15 +381,36 @@ router.get("/reporting/summed", async (req, res) => {
     });
 
     aggregatedData = [...pageSummaryRows, ...aggregatedData];
-    // Sort to ensure summary rows remain at the top
-    aggregatedData.sort((a, b) => {
-      if (a["Campaign Name"] === "All" && b["Campaign Name"] !== "All")
-        return -1;
-      if (b["Campaign Name"] === "All" && a["Campaign Name"] !== "All")
-        return 1;
-      return 0;
+
+    // Define the desired key order
+    const keyOrder = [
+      "Page Name",
+      "Campaign Name",
+      "Ad Set Name",
+      "Ad Name",
+      "Ad Creative",
+      "Impression Device",
+      "Placement",
+      "Amount Spent",
+      "Impressions",
+      "Reach",
+      "Link Clicks",
+      "CPC",
+      "CPM",
+      "CTR",
+    ];
+
+    // Reorder keys for each object in the aggregated data
+    const reorderedData = aggregatedData.map((entry) => {
+      const orderedEntry = {};
+      keyOrder.forEach((key) => {
+        orderedEntry[key] = entry[key];
+      });
+      return orderedEntry;
     });
-    res.status(200).json(aggregatedData);
+
+    // Send the reordered data to the frontend
+    res.status(200).json(reorderedData);
   } catch (error) {
     console.error("Error fetching summed reporting data:", error);
     res.status(500).json({ error: "Failed to fetch reporting data" });
