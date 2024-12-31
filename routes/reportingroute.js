@@ -205,6 +205,7 @@ router.get("/reporting/summed", async (req, res) => {
           "Campaign Name": 1,
           "Ad Set Name": 1,
           "Ad Name": 1,
+          "Ad Creative": 1,
           "Impression Device": 1,
           Placement: 1,
         },
