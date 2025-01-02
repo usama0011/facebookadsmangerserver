@@ -88,14 +88,6 @@ router.get("/reporting/summed", async (req, res) => {
       },
       {
         $addFields: {
-          normalizedPlacement: { $toLower: { $trim: { input: "$Placement" } } },
-          normalizedImpressionDevice: {
-            $cond: [
-              { $eq: ["$Impression Device", "all"] },
-              "All", // Ensure "All" is capitalized properly
-              { $toLower: { $trim: { input: "$Impression Device" } } },
-            ],
-          },
           validAdCreative: {
             $cond: [
               { $regexMatch: { input: "$Ad Creative", regex: /^\{.*\}$/ } },
@@ -138,8 +130,8 @@ router.get("/reporting/summed", async (req, res) => {
             "Ad Set Name": "$Ad Set Name",
             "Ad Name": "$Ad Name",
             "Ad Creative": "$Ad Creative",
-            "Impression Device": "$normalizedImpressionDevice",
-            Placement: "$normalizedPlacement",
+            "Impression Device": "$Impression Device",
+            Placement: "$Placement",
           },
           "Amount Spent": { $sum: "$convertedAmountSpent" },
           Impressions: { $sum: "$convertedImpressions" },
@@ -212,41 +204,41 @@ router.get("/reporting/summed", async (req, res) => {
       },
     ]);
 
-    // Sum metrics for each device under "all" placement for each campaign
+    // Sum metrics for each device under "All" placement for each campaign
     const campaignDeviceTotals = {};
 
     aggregatedData.forEach((entry) => {
-      if (entry.Placement === "all") {
+      if (entry.Placement === "All") {
         const campaignKey = entry["Campaign Name"];
         const deviceKey = entry["Impression Device"];
 
         if (!campaignDeviceTotals[campaignKey]) {
           campaignDeviceTotals[campaignKey] = {
-            "device: android smartphone": {
+            "Device: Android Smartphone": {
               amountSpent: 0,
               impressions: 0,
               reach: 0,
               linkClicks: 0,
             },
-            "device: android tablet": {
+            "Device: Android Tablet": {
               amountSpent: 0,
               impressions: 0,
               reach: 0,
               linkClicks: 0,
             },
-            "device: desktop": {
+            "Device: Desktop": {
               amountSpent: 0,
               impressions: 0,
               reach: 0,
               linkClicks: 0,
             },
-            "device: ipad": {
+            "Device: iPad": {
               amountSpent: 0,
               impressions: 0,
               reach: 0,
               linkClicks: 0,
             },
-            "device: iphone": {
+            "Device: iPhone": {
               amountSpent: 0,
               impressions: 0,
               reach: 0,
@@ -417,5 +409,4 @@ router.get("/reporting/summed", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch reporting data" });
   }
 });
-
 export default router;
