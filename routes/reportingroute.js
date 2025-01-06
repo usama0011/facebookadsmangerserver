@@ -63,7 +63,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
 router.get("/reporting/summed", async (req, res) => {
   try {
     // Extract filter parameters from query
-    const { campaignName, startDate, endDate } = req.query;
+    const { campaignName, startDate, endDate, PageID } = req.query;
 
     // Build the filter criteria dynamically
     const filterCriteria = {};
@@ -78,7 +78,9 @@ router.get("/reporting/summed", async (req, res) => {
         $lte: endDate,
       };
     }
-
+    if (PageID) {
+      filterCriteria["Page ID"] = PageID;
+    }
     // Filter the data based on criteria before aggregation
     const filteredData = await Reporting.find(filterCriteria);
 
