@@ -75,11 +75,39 @@ router.get("/", async (req, res) => {
             acc.clicksAll += campaign.clicksAll || 0;
 
             // Update new fields to keep the maximum values
-            acc.CPM = Math.max(acc.CPM, campaign.CPM || 0);
-            acc.CPC = Math.max(acc.CPC, campaign.CPC || 0);
-            acc.CTR = Math.max(acc.CTR, campaign.CTR || 0);
-            acc.CTRALL = Math.max(acc.CTRALL, campaign.CTRALL || 0);
-            acc.CPCAll = Math.max(acc.CPCAll, campaign.CPCAll || 0);
+            acc.CPM =
+              parseFloat(
+                ((acc.Amountspent / acc.Impressions) * 1000).toFixed(2)
+              ) || 0;
+
+            acc.CPC =
+              acc.LinksClicks > 0
+                ? parseFloat((acc.Amountspent / acc.LinksClicks).toFixed(2))
+                : 0;
+
+            acc.CTR =
+              acc.Impressions > 0
+                ? parseFloat(
+                    ((acc.LinksClicks / acc.Impressions) * 100).toFixed(2)
+                  )
+                : 0;
+            acc.Costperresult =
+              acc.LinksClicks > 0
+                ? parseFloat((acc.Amountspent / acc.LinksClicks).toFixed(2))
+                : 0;
+
+            acc.CTRALL =
+              acc.Impressions > 0
+                ? parseFloat(
+                    ((acc.clicksAll / acc.Impressions) * 100).toFixed(2)
+                  )
+                : 0;
+
+            acc.CPCAll =
+              acc.clicksAll > 0
+                ? parseFloat((acc.Amountspent / acc.clicksAll).toFixed(2))
+                : 0;
+
             return acc;
           },
           {
