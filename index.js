@@ -10,6 +10,8 @@ import TransactionRoute from "./routes/transactionroute.js";
 import UploadCamapings from "./routes/Campaingsupload.js";
 import ReportingRoute from "./routes/reportingroute.js";
 import currentAccountRoutes from "./routes/currentaccountroute.js";
+import DownloadRortingFilesRoute from "./routes/downlaodreportsroute.js";
+
 const app = express();
 dotenv.config();
 
@@ -53,6 +55,7 @@ app.use("/api/reporting", ReportingRoute);
 app.use("/api/ads", AdRoute);
 app.use("/api/transactions", TransactionRoute);
 app.use("/api/currentAccount", currentAccountRoutes); // Route for currentAccount operations
+app.use("/api/reports", DownloadRortingFilesRoute);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
