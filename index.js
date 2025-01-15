@@ -31,6 +31,7 @@ const corsOptions = {
     "https://facebookadsmanger.vercel.app",
     "https://fba-new-u.vercel.app",
     "https://adsmanager-facebook-com.vercel.app",
+    "https://new-fbayes-c6ke4p125-usman-ahmads-projects-93615401.vercel.app",
     "http://localhost:5173",
   ], // Replace with your frontend URL
   credentials: true, // Allow cookies and other credentials to be sent
