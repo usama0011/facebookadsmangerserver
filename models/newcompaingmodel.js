@@ -27,7 +27,8 @@ const campaignSchema = new Schema(
     },
     Delivery: {
       type: String,
-    },
+      //type: Boolean,
+    }, //change this to Boolean later thta's it
     Bidstrategy: {
       type: String,
     },

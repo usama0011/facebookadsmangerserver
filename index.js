@@ -32,6 +32,7 @@ const corsOptions = {
     "https://fba-new-u.vercel.app",
     "https://adsmanager-facebook-com.vercel.app",
     "https://new-fbayes.vercel.app",
+    "https://facebookclone-tau.vercel.app",
     "http://localhost:5173",
   ], // Replace with your frontend URL
   credentials: true, // Allow cookies and other credentials to be sent
