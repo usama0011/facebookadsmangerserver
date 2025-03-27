@@ -375,7 +375,59 @@ router.get("/reporting/summed", async (req, res) => {
       });
     });
 
-    aggregatedData = [...pageSummaryRows, ...aggregatedData];
+    const pageGroupedData = {};
+
+    aggregatedData.forEach((entry) => {
+      const pageName = entry["Page Name"];
+      if (!pageGroupedData[pageName]) pageGroupedData[pageName] = [];
+      pageGroupedData[pageName].push(entry);
+    });
+    let finalData = [];
+
+    Object.entries(pageGroupedData).forEach(([pageName, entries]) => {
+      const processedCampaigns = new Set();
+      let totalAmountSpent = 0;
+      let totalImpressions = 0;
+      let totalReach = 0;
+      let totalLinkClicks = 0;
+
+      entries.forEach((entry) => {
+        if (!processedCampaigns.has(entry["Campaign Name"])) {
+          totalAmountSpent += entry["Amount Spent"];
+          totalImpressions += entry.Impressions;
+          totalReach += entry.Reach;
+          totalLinkClicks += entry["Link Clicks"];
+          processedCampaigns.add(entry["Campaign Name"]);
+        }
+      });
+
+      const cpc = totalLinkClicks > 0 ? totalAmountSpent / totalLinkClicks : 0;
+      const cpm =
+        totalImpressions > 0 ? (totalAmountSpent / totalImpressions) * 1000 : 0;
+      const ctr =
+        totalImpressions > 0 ? (totalLinkClicks / totalImpressions) * 100 : 0;
+
+      // 👇🏻 Add the same summary row just before the group of its page
+      finalData.push({
+        "Page Name": pageName,
+        "Campaign Name": "All",
+        "Ad Set Name": "All",
+        "Ad Name": "All",
+        "Ad Creative": "All",
+        "Impression Device": "All",
+        Placement: "All",
+        "Amount Spent": totalAmountSpent,
+        Impressions: totalImpressions,
+        Reach: totalReach,
+        "Link Clicks": totalLinkClicks,
+        CPC: cpc,
+        CPM: cpm,
+        CTR: ctr,
+      });
+
+      // 👇🏻 Then push all entries of that page group
+      finalData.push(...entries);
+    });
 
     // Define the desired key order
     const keyOrder = [
@@ -395,8 +447,8 @@ router.get("/reporting/summed", async (req, res) => {
       "CTR",
     ];
 
-    // Reorder keys for each object in the aggregated data
-    const reorderedData = aggregatedData.map((entry) => {
+    // ✅ Reorder keys from finalData
+    const reorderedData = finalData.map((entry) => {
       const orderedEntry = {};
       keyOrder.forEach((key) => {
         orderedEntry[key] = entry[key];
@@ -404,7 +456,7 @@ router.get("/reporting/summed", async (req, res) => {
       return orderedEntry;
     });
 
-    // Send the reordered data to the frontend
+    // ✅ Send the reordered data to the frontend ONCE
     res.status(200).json(reorderedData);
   } catch (error) {
     console.error("Error fetching summed reporting data:", error);
