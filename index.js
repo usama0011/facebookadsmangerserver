@@ -25,24 +25,24 @@ try {
   process.exit(1); // Exit the process if unable to connect to MongoDB
 }
 
-// Define the CORS options
 const corsOptions = {
   origin: [
     "https://facebookadsmanger.vercel.app",
     "https://fba-new-u.vercel.app",
     "https://adsmanager-facebook-com.vercel.app",
     "https://new-fbayes.vercel.app",
-    "https://facebookclone-tau.vercel.app",
+    "https://facebookclone-tau.vercel.app", // ✅ This is the one causing issues earlier
     "adsmanager.facebook.com",
     "http://adsmanager.facebook.com",
     "http://localhost:5173",
-  ], // Replace with your frontend URL
-  credentials: true, // Allow cookies and other credentials to be sent
-  methods: ["GET", "POST", "PUT", "DELETE"], // Allow necessary methods
-  allowedHeaders: ["Content-Type", "Authorization"], // Allow necessary headers
+  ],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 };
 
 app.use(cors(corsOptions));
+
 app.use(express.json());
 app.use(cookieParser());
 
