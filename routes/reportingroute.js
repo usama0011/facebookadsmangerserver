@@ -52,6 +52,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
     });
   } catch (error) {
     console.error("Error uploading CSV:", error);
+    console.log(error.message);
     res.status(500).json({
       success: false,
       message: "Failed to upload CSV data",
