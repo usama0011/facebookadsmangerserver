@@ -134,6 +134,7 @@ router.get("/reporting/summed", async (req, res) => {
             "Ad Creative": "$Ad Creative",
             "Impression Device": "$Impression Device",
             Placement: "$Placement",
+            pageImageLink: "$pageImageLink", // 👈 Add this line
           },
           "Amount Spent": { $sum: "$convertedAmountSpent" },
           Impressions: { $sum: "$convertedImpressions" },
@@ -184,6 +185,7 @@ router.get("/reporting/summed", async (req, res) => {
           "Ad Creative": "$_id.Ad Creative",
           "Impression Device": "$_id.Impression Device",
           Placement: "$_id.Placement",
+          pageImageLink: "$pageImageLink", // 👈 Add this line
           "Amount Spent": 1,
           Impressions: 1,
           Reach: 1,
@@ -416,6 +418,7 @@ router.get("/reporting/summed", async (req, res) => {
         "Ad Creative": "All",
         "Impression Device": "All",
         Placement: "All",
+        pageImageLink: "", // 👈 Add this line
         "Amount Spent": totalAmountSpent,
         Impressions: totalImpressions,
         Reach: totalReach,
@@ -431,6 +434,7 @@ router.get("/reporting/summed", async (req, res) => {
 
     // Define the desired key order
     const keyOrder = [
+      "pageImageLink", // 👈 Add this line
       "Page Name",
       "Campaign Name",
       "Ad Set Name",
