@@ -5,6 +5,7 @@ const reportingSchema = new mongoose.Schema({
   "Entry Date": { type: String, required: false },
   "Page Name": { type: String, required: false },
   "Campaign Name": { type: String, required: false },
+  pageImageLink: { type: String, required: false },
   "Ad Set Name": { type: String, required: false },
   "Ad Name": { type: String, required: false },
   "Ad Creative": { type: String, required: false },
