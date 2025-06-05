@@ -135,6 +135,8 @@ router.get("/reporting/summed", async (req, res) => {
             "Ad Creative": "$Ad Creative",
             "Impression Device": "$Impression Device",
             Placement: "$Placement",
+                pageImageLink: "$pageImageLink", // ✅ Add this line
+
           },
           "Amount Spent": { $sum: "$convertedAmountSpent" },
           Impressions: { $sum: "$convertedImpressions" },
@@ -184,6 +186,7 @@ router.get("/reporting/summed", async (req, res) => {
           "Ad Name": "$_id.Ad Name",
           "Ad Creative": "$_id.Ad Creative",
           "Impression Device": "$_id.Impression Device",
+            "pageImageLink": "$_id.pageImageLink", // ✅ Add this line
           Placement: "$_id.Placement",
           "Amount Spent": 1,
           Impressions: 1,
@@ -439,6 +442,7 @@ router.get("/reporting/summed", async (req, res) => {
       "Ad Creative",
       "Impression Device",
       "Placement",
+       "pageImageLink", // ✅ Add this line
       "Amount Spent",
       "Impressions",
       "Reach",
